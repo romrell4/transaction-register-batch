@@ -69,7 +69,7 @@ class Transaction:
         self.category_name = None
         self.description = None
 
-    def verify(self, categories):
+    def verify(self, categories, predictions):
         print(self)
         answer = input("Is this transaction already added? (n) ").lower()
         if answer.startswith("y"):
@@ -82,7 +82,7 @@ class Transaction:
             DB.save()
             raise StopException()
         self.verify_business()
-        self.verify_category(categories)
+        self.verify_category(categories, predictions)
         self.description = self._verify("Description", None)
         print(self)
         return True
@@ -96,13 +96,14 @@ class Transaction:
             DB.put_business(self.business, business)
         self.business = business
 
-    def verify_category(self, categories):
+    def verify_category(self, categories, predictions):
+        default_category_id = next(iter([pred["predictedCategoryId"] for pred in predictions if pred["businessName"] == self.business]), 0)
+        default_category_name = next(iter([category["name"] for category in categories if category["categoryId"] == default_category_id]), "")
+
         category = None
         while category is None:
-            category_name = self._verify("Category Name", "")
-            possible_categories = [category for category in categories if category["name"].upper() == category_name.upper()]
-            if len(possible_categories) == 1:
-                category = possible_categories[0]
+            category_name = self._verify("Category Name", default_category_name)
+            category = next(iter([category for category in categories if category["name"].upper() == category_name.upper()]), None)
         self.category_id = category["categoryId"]
         self.category_name = category["name"]
 
