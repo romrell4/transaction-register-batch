@@ -24,26 +24,16 @@ class TransactionFactory:
             # Remove txs already added or too recent (since they might change order in the next day or two)
             if DB.is_visa_tx_completed(tx_id) or (datetime.today() - purchase_date).days < DATE_LAG:
                 return None
-            Transaction(account_type, purchase_date, full_business, short_business, amount, tx_id)
+            return Transaction(account_type, purchase_date, full_business, short_business, amount, tx_id)
         else:
-            tx_id = cls.get_account_tx_id(cells[0])
             purchase_date = datetime.strptime(cls.clean_cell(cells[1]), "%m/%d/%y")
             business = cls.clean_cell(cells[2])
             amount = cls.get_amount(cells[4]) - cls.get_amount(cells[3])
+            tx_id = "{}|{}|{}".format(purchase_date, business, amount)
 
             if DB.is_account_tx_completed(tx_id):
                 return None
             return Transaction(account_type, purchase_date, business, business, amount, tx_id)
-
-    @classmethod
-    def get_account_tx_id(cls, cell):
-        data_url = cell.find("a", "expand-collapse-link")["data-url"]
-        matches = re.findall("additionalTransactionDetails/(.*)\?", data_url)
-
-        # For checks, the data-url is formatted differently
-        if len(matches) != 1:
-            matches = re.findall("transactions/(.*)/", data_url)
-        return matches[0]
 
     @classmethod
     def get_amount(cls, cell):
