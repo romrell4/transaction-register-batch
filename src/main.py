@@ -20,7 +20,7 @@ def run():
         run_account(PaymentType.DEBIT)
         run_account(PaymentType.SAVINGS)
         run_account(PaymentType.PERMANENT_SAVINGS)
-    except StopException:
+    except:
         pass
 
     # Save the in memory db back to a json file
